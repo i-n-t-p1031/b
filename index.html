@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<title>ミニたまごっち</title>
+<style>
+  body {
+    margin: 0;
+    font-family: sans-serif;
+    background: linear-gradient(#b3ecff, #e6faff);
+    text-align: center;
+  }
+
+  .game {
+    margin: 50px auto;
+    width: 300px;
+    background: white;
+    border-radius: 20px;
+    padding: 20px;
+    box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+  }
+
+  h1 {
+    color: #33aadd;
+  }
+
+  .pet {
+    font-size: 60px;
+    margin: 20px 0;
+  }
+
+  .status {
+    text-align: left;
+    margin: 10px 0;
+  }
+
+  .bar {
+    height: 10px;
+    background: #ddd;
+    border-radius: 10px;
+    overflow: hidden;
+    margin-bottom: 10px;
+  }
+
+  .fill {
+    height: 100%;
+    background: #66ccff;
+    width: 50%;
+  }
+
+  button {
+    margin: 5px;
+    padding: 10px 15px;
+    border: none;
+    border-radius: 10px;
+    background: #66ccff;
+    color: white;
+    cursor: pointer;
+  }
+
+  button:hover {
+    background: #3399cc;
+  }
+</style>
+</head>
+<body>
+
+<div class="game">
+  <h1>ミニたまごっち</h1>
+
+  <div class="pet" id="pet">🥚</div>
+
+  <div class="status">おなか</div>
+  <div class="bar"><div class="fill" id="hunger"></div></div>
+
+  <div class="status">げんき</div>
+  <div class="bar"><div class="fill" id="energy"></div></div>
+
+  <div class="status">きげん</div>
+  <div class="bar"><div class="fill" id="mood"></div></div>
+
+  <button onclick="feed()">ごはん</button>
+  <button onclick="sleep()">ねる</button>
+  <button onclick="play()">あそぶ</button>
+
+  <p id="message"></p>
+</div>
+
+<script>
+let hunger = 50;
+let energy = 50;
+let mood = 50;
+let stage = 0;
+
+function updateUI() {
+  document.getElementById("hunger").style.width = hunger + "%";
+  document.getElementById("energy").style.width = energy + "%";
+  document.getElementById("mood").style.width = mood + "%";
+
+  // 成長
+  if (hunger > 70 && energy > 70 && mood > 70) {
+    stage = 2;
+  } else if (hunger > 40) {
+    stage = 1;
+  } else {
+    stage = 0;
+  }
+
+  const pet = document.getElementById("pet");
+  if (stage === 0) pet.textContent = "🥚";
+  if (stage === 1) pet.textContent = "🐣";
+  if (stage === 2) pet.textContent = "🐥";
+
+  // メッセージ
+  if (hunger < 20) showMessage("おなかすいた…");
+  else if (energy < 20) showMessage("ねむい…");
+  else if (mood < 20) showMessage("たいくつ…");
+}
+
+function showMessage(msg) {
+  document.getElementById("message").textContent = msg;
+}
+
+// アクション
+function feed() {
+  hunger = Math.min(100, hunger + 20);
+  mood += 5;
+  showMessage("もぐもぐ！");
+  updateUI();
+}
+
+function sleep() {
+  energy = Math.min(100, energy + 25);
+  showMessage("ぐーぐー…😴");
+  updateUI();
+}
+
+function play() {
+  mood = Math.min(100, mood + 20);
+  energy -= 10;
+  hunger -= 5;
+  showMessage("たのしい！");
+  updateUI();
+}
+
+// 時間経過
+setInterval(() => {
+  hunger -= 2;
+  energy -= 2;
+  mood -= 2;
+
+  hunger = Math.max(0, hunger);
+  energy = Math.max(0, energy);
+  mood = Math.max(0, mood);
+
+  updateUI();
+}, 3000);
+
+updateUI();
+</script>
+
+</body>
+</html>
