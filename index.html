@@ -2,161 +2,128 @@
 <html lang="ja">
 <head>
 <meta charset="UTF-8">
-<title>ミニたまごっち</title>
+<title>ミニあつ森風ゲーム</title>
 <style>
   body {
     margin: 0;
+    background: #b3ecff;
     font-family: sans-serif;
-    background: linear-gradient(#b3ecff, #e6faff);
     text-align: center;
   }
 
-  .game {
-    margin: 50px auto;
-    width: 300px;
-    background: white;
-    border-radius: 20px;
-    padding: 20px;
-    box-shadow: 0 10px 25px rgba(0,0,0,0.1);
-  }
-
   h1 {
-    color: #33aadd;
+    margin: 10px;
+    color: #2c7a7b;
   }
 
-  .pet {
-    font-size: 60px;
-    margin: 20px 0;
-  }
-
-  .status {
-    text-align: left;
-    margin: 10px 0;
-  }
-
-  .bar {
-    height: 10px;
-    background: #ddd;
+  canvas {
+    background: #87d37c;
+    border: 4px solid #2c7a7b;
     border-radius: 10px;
-    overflow: hidden;
-    margin-bottom: 10px;
   }
 
-  .fill {
-    height: 100%;
-    background: #66ccff;
-    width: 50%;
-  }
-
-  button {
-    margin: 5px;
-    padding: 10px 15px;
-    border: none;
-    border-radius: 10px;
-    background: #66ccff;
-    color: white;
-    cursor: pointer;
-  }
-
-  button:hover {
-    background: #3399cc;
+  .info {
+    margin: 10px;
   }
 </style>
 </head>
 <body>
 
-<div class="game">
-  <h1>ミニたまごっち</h1>
-
-  <div class="pet" id="pet">🥚</div>
-
-  <div class="status">おなか</div>
-  <div class="bar"><div class="fill" id="hunger"></div></div>
-
-  <div class="status">げんき</div>
-  <div class="bar"><div class="fill" id="energy"></div></div>
-
-  <div class="status">きげん</div>
-  <div class="bar"><div class="fill" id="mood"></div></div>
-
-  <button onclick="feed()">ごはん</button>
-  <button onclick="sleep()">ねる</button>
-  <button onclick="play()">あそぶ</button>
-
-  <p id="message"></p>
-</div>
+<h1>🌴 ミニあつ森風 🌴</h1>
+<div class="info">矢印キーで移動 / スペースで家具設置</div>
+<canvas id="game" width="400" height="400"></canvas>
 
 <script>
-let hunger = 50;
-let energy = 50;
-let mood = 50;
-let stage = 0;
+const canvas = document.getElementById("game");
+const ctx = canvas.getContext("2d");
 
-function updateUI() {
-  document.getElementById("hunger").style.width = hunger + "%";
-  document.getElementById("energy").style.width = energy + "%";
-  document.getElementById("mood").style.width = mood + "%";
+const tileSize = 40;
+const mapSize = 10;
 
-  // 成長
-  if (hunger > 70 && energy > 70 && mood > 70) {
-    stage = 2;
-  } else if (hunger > 40) {
-    stage = 1;
-  } else {
-    stage = 0;
+// マップ生成
+let map = [];
+for (let y = 0; y < mapSize; y++) {
+  let row = [];
+  for (let x = 0; x < mapSize; x++) {
+    let rand = Math.random();
+    if (rand < 0.1) row.push("water");
+    else if (rand < 0.2) row.push("tree");
+    else row.push("grass");
+  }
+  map.push(row);
+}
+
+let player = { x: 1, y: 1 };
+let furniture = [];
+
+document.addEventListener("keydown", (e) => {
+  let nx = player.x;
+  let ny = player.y;
+
+  if (e.key === "ArrowUp") ny--;
+  if (e.key === "ArrowDown") ny++;
+  if (e.key === "ArrowLeft") nx--;
+  if (e.key === "ArrowRight") nx++;
+
+  // 移動制限
+  if (
+    nx >= 0 && nx < mapSize &&
+    ny >= 0 && ny < mapSize &&
+    map[ny][nx] !== "water" &&
+    map[ny][nx] !== "tree"
+  ) {
+    player.x = nx;
+    player.y = ny;
   }
 
-  const pet = document.getElementById("pet");
-  if (stage === 0) pet.textContent = "🥚";
-  if (stage === 1) pet.textContent = "🐣";
-  if (stage === 2) pet.textContent = "🐥";
+  // 家具設置
+  if (e.key === " ") {
+    furniture.push({ x: player.x, y: player.y });
+  }
 
-  // メッセージ
-  if (hunger < 20) showMessage("おなかすいた…");
-  else if (energy < 20) showMessage("ねむい…");
-  else if (mood < 20) showMessage("たいくつ…");
+  draw();
+});
+
+function drawTile(x, y, type) {
+  if (type === "grass") ctx.fillStyle = "#87d37c";
+  if (type === "water") ctx.fillStyle = "#4da6ff";
+  if (type === "tree") ctx.fillStyle = "#2e8b57";
+
+  ctx.fillRect(x * tileSize, y * tileSize, tileSize, tileSize);
+
+  // 絵文字
+  if (type === "tree") {
+    ctx.font = "24px sans-serif";
+    ctx.fillText("🌳", x * tileSize + 5, y * tileSize + 30);
+  }
+  if (type === "water") {
+    ctx.font = "24px sans-serif";
+    ctx.fillText("🌊", x * tileSize + 5, y * tileSize + 30);
+  }
 }
 
-function showMessage(msg) {
-  document.getElementById("message").textContent = msg;
+function draw() {
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+  // マップ描画
+  for (let y = 0; y < mapSize; y++) {
+    for (let x = 0; x < mapSize; x++) {
+      drawTile(x, y, map[y][x]);
+    }
+  }
+
+  // 家具
+  ctx.font = "24px sans-serif";
+  furniture.forEach(f => {
+    ctx.fillText("🪑", f.x * tileSize + 5, f.y * tileSize + 30);
+  });
+
+  // プレイヤー
+  ctx.font = "28px sans-serif";
+  ctx.fillText("😀", player.x * tileSize + 5, player.y * tileSize + 30);
 }
 
-// アクション
-function feed() {
-  hunger = Math.min(100, hunger + 20);
-  mood += 5;
-  showMessage("もぐもぐ！");
-  updateUI();
-}
-
-function sleep() {
-  energy = Math.min(100, energy + 25);
-  showMessage("ぐーぐー…😴");
-  updateUI();
-}
-
-function play() {
-  mood = Math.min(100, mood + 20);
-  energy -= 10;
-  hunger -= 5;
-  showMessage("たのしい！");
-  updateUI();
-}
-
-// 時間経過
-setInterval(() => {
-  hunger -= 2;
-  energy -= 2;
-  mood -= 2;
-
-  hunger = Math.max(0, hunger);
-  energy = Math.max(0, energy);
-  mood = Math.max(0, mood);
-
-  updateUI();
-}, 3000);
-
-updateUI();
+draw();
 </script>
 
 </body>
